@@ -3,7 +3,7 @@
 ### **Usage**:
 - Download the PGN file of the game you want to analyse; you can select and download Chess.com games from your game archive.
 - Replace the game.pgn file in this directory with the one you downloaded; make sure to rename yours to game.pgn as well.
-- Run `pip install -r requirements.txt` in a terminal to install the necessary libraries for this program.
+- Run `pip install -r requirements.txt` in a terminal to install all of the necessary libraries.
 - Run `python main.py` in a terminal to run the program.
 
 ### **Disclaimers**:
