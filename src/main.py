@@ -99,7 +99,7 @@ while True:
 
         evaluation = engine.get_analysis_results().evals[len(renderBoard.move_stack)]
 
-        # calc length of white portion of eval bar
+        # calc length of white portion of eval bar and draw it
         evalLength = 0
         if evaluation["type"] == "cp":
             evalLength = min(292, evaluation["value"] * 0.122 + 146)
@@ -126,6 +126,33 @@ while True:
             win.blit(font.render("Checkmate", True, "#ffffff"), (650, 60))
         else:
             win.blit(font.render("Mate in " + str(abs(evaluation["value"])), True, "#ffffff"), (650, 60))
+
+        # render played move and classification text
+        classificationText = "unknown"
+        currentClassification = engine.get_analysis_results().classifications[len(renderBoard.move_stack) - 1]
+
+        if currentClassification == "forced":
+            classificationText = "forced"
+        elif currentClassification == "blunder":
+            classificationText = "a blunder"
+        elif currentClassification == "mistake":
+            classificationText = "a mistake"
+        elif currentClassification == "inaccuracy":
+            classificationText = "an inaccuracy"
+        elif currentClassification == "good":
+            classificationText = "good"
+        elif currentClassification == "excellent":
+            classificationText = "excellent"
+        elif currentClassification == "best":
+            classificationText = "best"
+
+        win.blit(
+            font.render(
+                engine.get_analysis_results().sanMoves[len(renderBoard.move_stack) - 1] + " is " + classificationText, 
+                True, 
+                board.classificationColours[currentClassification]
+            ), (650, 84)
+        )
     else:
         pygame.draw.rect(win, "#2cff4f", pygame.Rect(654, 14, (progress[0] / progress[1]) * 292, 42))
         if progress[2]:
