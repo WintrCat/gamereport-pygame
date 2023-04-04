@@ -29,7 +29,8 @@ def extract_moves():
 # ANALYSIS ALGORITHM
 #
 class AnalysisResults:
-    moves: list[str] = []
+    complete: bool = False
+    board: chess.Board = None
     evals: list[dict] = []
     classifications: list[str] = []
 
@@ -37,8 +38,16 @@ def startAnalysisThread():
     t = threading.Thread(target=analyse)
     t.start()
 
+progress = [0, 1]
+def get_analysis_progress():
+    return progress
+
+results = AnalysisResults()
+def get_analysis_results():
+    return results
+
 def analyse():
-    global fenCache
+    global fenCache, progress, results
     
     # initialise conversion board
     board = chess.Board()
@@ -47,8 +56,8 @@ def analyse():
     moves: list[str] = extract_moves()
     evals: list[dict] = [engine.get_evaluation()]
 
-    print("bruh")
-    for move in moves:
+    # collect evaluations from each move in the game
+    for moveCount, move in enumerate(moves):
         # push move to conversion board
         board.push_san(move)
 
@@ -63,3 +72,32 @@ def analyse():
         # evaluate position after this move and add to list
         evals.append(engine.get_evaluation())
         print(evals[-1])
+
+        # update progress
+        progress = [moveCount + 1, len(moves)]
+
+    # generate classifications from evaluation differences
+    classifications: list[str] = []
+    for prev_eval, curr_eval in zip(evals, evals[1:]):
+        # calculate evaluation difference
+        diff = abs(curr_eval["value"] - prev_eval["value"])
+
+        # if no mate is involved in this move
+        if prev_eval["type"] == "cp" and curr_eval["type"] == "cp":
+            if diff < 10:
+                classifications.append("best")
+            elif diff < 50:
+                classifications.append("excellent")
+            elif diff < 120:
+                classifications.append("good")
+            elif diff < 180:
+                classifications.append("inaccuracy")
+            elif diff < 270:
+                classifications.append("mistake")
+            else:
+                classifications.append("blunder")
+    
+    results.complete = True
+    results.board = board
+    results.evals = evals
+    results.classifications = classifications
