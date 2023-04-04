@@ -1,4 +1,4 @@
-# **Chess Game Report**
+# **WintrCat's Game Report**
 
 ### **About**:
 A Python program by wintrcat that provides game reports for your chess games, without the need to pay for the Diamond premium on Chess.com. A locally installed instance of Stockfish 15.1 is used (Chess.com only uses 11!) to evaluate your moves, which the program then classifies and gives insights into. 
