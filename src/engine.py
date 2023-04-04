@@ -1,10 +1,15 @@
+import sys
 import threading
 import chess
 import stockfish
 import pgn
 
 engine = stockfish.Stockfish("stockfish/stockfish-windows-2022-x86-64-avx2.exe")
-engine.set_depth(12)
+
+if len(sys.argv) > 1 and sys.argv[1].isdigit():
+    engine.set_depth(int(sys.argv[1]))
+else:
+    engine.set_depth(18)
 
 def get(): 
     return engine
