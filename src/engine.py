@@ -79,14 +79,14 @@ def analyse():
     classifications: list[str] = []
     moveIndex = 0
     for prevEval, currEval in zip(evals, evals[1:]):
-        # calculate evaluation difference
-        diff = abs(currEval["value"] - prevEval["value"])
-
         # if there is only one legal move here apply forced
         if len(topMoves[moveIndex]) == 1:
             classifications.append("forced")
             moveIndex += 1
             continue
+
+        # calculate evaluation difference
+        diff = abs(currEval["value"] - prevEval["value"])
 
         # if no mate is involved in this move
         if prevEval["type"] == "cp" and currEval["type"] == "cp":

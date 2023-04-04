@@ -153,6 +153,25 @@ while True:
                 board.classificationColours[currentClassification]
             ), (650, 84)
         )
+
+        # render top engine moves text
+        for i, move in enumerate(engine.get_analysis_results().topMoves[len(renderBoard.move_stack)]):
+            # get polarity string because '+' not included
+            centipawnPolarity = ""
+            if move["Centipawn"] != None and move["Centipawn"] > 0:
+                centipawnPolarity = "+"
+
+            # get SAN from UCI
+            moveSan = renderBoard.san(chess.Move.from_uci(move["Move"]))
+
+            win.blit(
+                font.render(
+                    f"{moveSan} > {centipawnPolarity}{(move['Centipawn'] / 100) if move['Centipawn'] != None else 'M' + str(abs(move['Mate']))}",
+                    True,
+                    "#ffffff"
+                ), (650, 108 + i * 24)
+            )
+            
     else:
         pygame.draw.rect(win, "#2cff4f", pygame.Rect(654, 14, (progress[0] / progress[1]) * 292, 42))
         if progress[2]:
