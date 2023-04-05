@@ -16,4 +16,4 @@ The engine used for this program is Stockfish 15.1, although other versions inst
 
 ### **Disclaimers**:
 - Stockfish source code is not included in this repository. The source code has not been modified and is available @ https://github.com/official-stockfish/Stockfish
-- pgn.py is not by me, copyright license for the library is included within the script file.
+- pgn.py is not by me; copyright license for the library is included within its script file, `src/pgn.py`.
