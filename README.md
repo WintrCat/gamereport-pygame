@@ -4,6 +4,7 @@
 A Python program by wintrcat that provides game reports for your chess games, without the need to pay for the Diamond premium on Chess.com. A locally installed instance of Stockfish 15.1 is used (Chess.com only uses 11!) to evaluate your moves, which the program then classifies and gives insights into. 
 
 ### **Usage**:
+- Run `git clone https://github.com/wintrcat/gamereport.git` in a terminal to download the program. You can also download as a ZIP if you do not have Git installed.
 - Download the PGN file of the game you want to analyse; you can select and download Chess.com games from your game archive.
 - Replace the game.pgn file in this directory with the one you downloaded; make sure to rename yours to game.pgn as well.
 - Run `pip install -r requirements.txt` in a terminal to install all of the necessary libraries.
