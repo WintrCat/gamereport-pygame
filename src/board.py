@@ -25,7 +25,8 @@ classificationColours = {
     "inaccuracy": pygame.Color(246, 193, 69),
     "mistake": pygame.Color(228, 142, 42),
     "blunder": pygame.Color(202, 52, 49),
-    "forced": pygame.Color(151, 175, 138)
+    "forced": pygame.Color(151, 175, 138),
+    "book": pygame.Color(168, 136, 101)
 }
 
 def reverse_list(arr: list):

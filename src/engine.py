@@ -1,8 +1,11 @@
 import sys
 import threading
+import csv
 import chess
 import stockfish
 import pgn
+
+openingBook = csv.reader(open("openings.csv", "r"))
 
 engine = stockfish.Stockfish("stockfish/stockfish-windows-2022-x86-64-avx2.exe")
 
@@ -29,6 +32,7 @@ def extract_moves():
 #
 class AnalysisResults:
     complete: bool = False
+    openings: list[str] = []
     sanMoves: list[str] = []
     board: chess.Board = None
     evals: list[dict] = []
@@ -54,14 +58,17 @@ def analyse():
     board = chess.Board()
 
     # list of moves from pgn and empty list of evaluations
+    fens: list[str] = []
+    openings: list[str] = []
     moves: list[str] = extract_moves()
     evals: list[dict] = [engine.get_evaluation()]
     topMoves: list[list[dict]] = [engine.get_top_moves(2)]
 
-    # collect evaluations and top moves from each move in the game
+    # COLLECT EVALUATIONS AND TOP ENGINE LINES
     for moveCount, move in enumerate(moves):
-        # push move to conversion board
+        # push move to conversion board and store fen
         board.push_san(move)
+        fens.append(board.fen().split(" ")[0])
 
         # get uci from conversion board and transfer to internal engine board
         engine.make_moves_from_current_position([
@@ -75,10 +82,21 @@ def analyse():
         # update progress
         progress = [moveCount + 1, len(moves), True]
 
-    # generate classifications from evaluation differences
+    # GENERATE CLASSIFICATIONS
     classifications: list[str] = []
     moveIndex = 0
     for prevEval, currEval in zip(evals, evals[1:]):
+        # if board fen is in the opening book, apply book and skip to next eval
+        isBook = False
+        for opening in openingBook:
+            if fens[moveIndex] == opening[1]:
+                classifications.append("book")
+                openings.append(opening[0])
+                moveIndex += 1
+                isBook = True
+                break
+        if isBook: continue
+
         # if there is only one legal move here apply forced
         if len(topMoves[moveIndex]) == 1:
             classifications.append("forced")
@@ -173,6 +191,7 @@ def analyse():
         moveIndex += 1
     
     results.complete = True
+    results.openings = openings
     results.sanMoves = moves
     results.board = board
     results.evals = evals

@@ -15,6 +15,7 @@ pygame.display.set_caption("WintrCat's Game Report")
 pygame.display.set_icon(pygame.image.load("assets/icon.png"))
 
 font: pygame.font.Font = pygame.font.SysFont("Arial", 24)
+smallerFont: pygame.font.Font = pygame.font.SysFont("Arial", 10)
 
 # setup virtual board for rendering
 renderBoard = chess.Board()
@@ -83,13 +84,6 @@ while True:
     # render board, pieces & move classification & arrows
     board.render(win, renderBoard, renderBoardFlipped)
 
-    if engine.get_analysis_results().complete and len(renderBoard.move_stack) > 0:
-        __import__("os", "system").system("cls")
-        print(engine.get_analysis_results().classifications[len(renderBoard.move_stack) - 1])
-        print(engine.get_analysis_results().evals[len(renderBoard.move_stack)])
-        print(engine.get_analysis_results().topMoves[len(renderBoard.move_stack)])
-        print(engine.get_analysis_results().topMoves[48])
-
     # render analysis loading bar or eval bar depending on analysis completion
     progress = engine.get_analysis_progress()
     pygame.draw.rect(win, "#1b1b1b", pygame.Rect(650, 10, 300, 50))
@@ -145,6 +139,8 @@ while True:
             classificationText = "excellent"
         elif currentClassification == "best":
             classificationText = "best"
+        elif currentClassification == "book":
+            classificationText = "book theory"
 
         win.blit(
             font.render(
@@ -171,6 +167,16 @@ while True:
                     "#ffffff"
                 ), (650, 108 + i * 24)
             )
+
+        # render opening name
+        openings = engine.get_analysis_results().openings
+        win.blit(
+            smallerFont.render(
+                openings[min(len(renderBoard.move_stack) - 1, len(openings) - 1)],
+                True,
+                "#ffffff"
+            ), (650, 580)
+        )
             
     else:
         pygame.draw.rect(win, "#2cff4f", pygame.Rect(654, 14, (progress[0] / progress[1]) * 292, 42))
