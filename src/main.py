@@ -1,3 +1,4 @@
+import pickle
 import chess
 import pygame
 from time import sleep
@@ -5,6 +6,7 @@ from time import sleep
 import board
 import engine
 import inputlib
+import args
 
 pygame.init()
 
@@ -21,8 +23,10 @@ smallerFont: pygame.font.Font = pygame.font.SysFont("Arial", 10)
 renderBoard = chess.Board()
 renderBoardFlipped = False
 
-# begin analysis of pgn in new thread
-engine.startAnalysisThread()
+# parse command line arguments
+# analysis thread only started if savefile was NOT specified
+# thread starts in args module
+args.parseArguments()
 
 # main loop
 while True:
@@ -34,6 +38,7 @@ while True:
         if event.type == pygame.MOUSEBUTTONDOWN or event.type == pygame.KEYDOWN:
             if engine.get_analysis_results().complete:
                 try:
+
                     # back to start
                     if (
                         (inputlib.is_mouse_over(650, 700, 595, 640) and inputlib.is_mouse_down(0))
@@ -71,8 +76,17 @@ while True:
                         renderBoard.reset()
                         for move in engine.get_analysis_results().board.move_stack:
                             renderBoard.push_uci(move.uci())
-                except IndexError as err:
-                    print(err)
+
+                    # save analysis
+                    if (
+                        (inputlib.is_mouse_over(900, 950, 595, 640) and inputlib.is_mouse_down(0))
+                        or
+                        (inputlib.is_key_down(pygame.K_LCTRL) and inputlib.is_key_down(pygame.K_s))
+                    ):
+                        pickle.dump(engine.get_analysis_results(), open("save.asys", "wb"))
+
+                except:
+                    pass
 
             # flip board button (analysis doesn't have to be complete)
             if inputlib.is_mouse_over(850, 900, 595, 640) and inputlib.is_mouse_down(0):
@@ -122,33 +136,34 @@ while True:
             win.blit(font.render("Mate in " + str(abs(evaluation["value"])), True, "#ffffff"), (650, 60))
 
         # render played move and classification text
-        classificationText = "unknown"
-        currentClassification = engine.get_analysis_results().classifications[len(renderBoard.move_stack) - 1]
+        if len(renderBoard.move_stack) > 0:
+            classificationText = "unknown"
+            currentClassification = engine.get_analysis_results().classifications[len(renderBoard.move_stack) - 1]
 
-        if currentClassification == "forced":
-            classificationText = "forced"
-        elif currentClassification == "blunder":
-            classificationText = "a blunder"
-        elif currentClassification == "mistake":
-            classificationText = "a mistake"
-        elif currentClassification == "inaccuracy":
-            classificationText = "an inaccuracy"
-        elif currentClassification == "good":
-            classificationText = "good"
-        elif currentClassification == "excellent":
-            classificationText = "excellent"
-        elif currentClassification == "best":
-            classificationText = "best"
-        elif currentClassification == "book":
-            classificationText = "book theory"
+            if currentClassification == "forced":
+                classificationText = "forced"
+            elif currentClassification == "blunder":
+                classificationText = "a blunder"
+            elif currentClassification == "mistake":
+                classificationText = "a mistake"
+            elif currentClassification == "inaccuracy":
+                classificationText = "an inaccuracy"
+            elif currentClassification == "good":
+                classificationText = "good"
+            elif currentClassification == "excellent":
+                classificationText = "excellent"
+            elif currentClassification == "best":
+                classificationText = "best"
+            elif currentClassification == "book":
+                classificationText = "book theory"
 
-        win.blit(
-            font.render(
-                engine.get_analysis_results().sanMoves[len(renderBoard.move_stack) - 1] + " is " + classificationText, 
-                True, 
-                board.classificationColours[currentClassification]
-            ), (650, 84)
-        )
+            win.blit(
+                font.render(
+                    engine.get_analysis_results().sanMoves[len(renderBoard.move_stack) - 1] + " is " + classificationText, 
+                    True, 
+                    board.classificationColours[currentClassification]
+                ), (650, 84)
+            )
 
         # render top engine moves text
         for i, move in enumerate(engine.get_analysis_results().topMoves[len(renderBoard.move_stack)]):
@@ -168,11 +183,19 @@ while True:
                 ), (650, 108 + i * 24)
             )
 
+        # render save button (only exists when analysis is complete)
+        win.blit(
+            pygame.image.load("assets/save.png"),
+            (900, 595)
+        )
+
         # render opening name
         openings = engine.get_analysis_results().openings
         win.blit(
             smallerFont.render(
-                openings[min(len(renderBoard.move_stack) - 1, len(openings) - 1)],
+                openings[min(len(renderBoard.move_stack) - 1, len(openings) - 1)] 
+                if len(renderBoard.move_stack) > 0 
+                else "Starting Position",
                 True,
                 "#ffffff"
             ), (650, 580)

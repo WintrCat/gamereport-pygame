@@ -1,4 +1,3 @@
-import sys
 import threading
 import csv
 import chess
@@ -8,11 +7,6 @@ import pgn
 openingBook = csv.reader(open("openings.csv", "r"))
 
 engine = stockfish.Stockfish("stockfish/stockfish-windows-2022-x86-64-avx2.exe")
-
-if len(sys.argv) > 1 and sys.argv[1].isdigit():
-    engine.set_depth(int(sys.argv[1]))
-else:
-    engine.set_depth(18)
 
 def get(): 
     return engine
@@ -50,6 +44,10 @@ def get_analysis_progress():
 results = AnalysisResults()
 def get_analysis_results():
     return results
+
+def set_analysis_results(loadedResults: AnalysisResults):
+    global results
+    results = loadedResults
 
 def analyse():
     global progress, results
@@ -100,6 +98,12 @@ def analyse():
         # if there is only one legal move here apply forced
         if len(topMoves[moveIndex]) == 1:
             classifications.append("forced")
+            moveIndex += 1
+            continue
+
+        # if it is top engine move give best even if there is residue difference
+        if topMoves[moveIndex][0]["Move"] == board.move_stack[moveIndex].uci():
+            classifications.append("best")
             moveIndex += 1
             continue
 
