@@ -4,6 +4,8 @@ import engine
 
 # PARSE COMMAND-LINE ARGUMENTS
 def parseArguments():
+    engine.get().set_depth(18)
+
     saveFileSpecified = False
     argMode = ""
     for argument in sys.argv:
@@ -18,8 +20,6 @@ def parseArguments():
             argMode = ""
             if argument.isdigit():
                 engine.get().set_depth(int(argument))
-            else:
-                engine.get().set_depth(18)
         elif argMode == "file":
             argMode = ""
             try:

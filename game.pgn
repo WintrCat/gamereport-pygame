@@ -1,17 +1,20 @@
 [Event "Live Chess"]
 [Site "Chess.com"]
-[Date "2023.03.27"]
+[Date "2023.04.07"]
 [Round "-"]
-[White "PARASHAR42"]
+[White "Rajah14"]
 [Black "wintrcat"]
 [Result "0-1"]
-[WhiteElo "1445"]
-[BlackElo "1506"]
+[WhiteElo "1351"]
+[BlackElo "1466"]
 [TimeControl "1800"]
-[EndTime "13:04:18 PDT"]
+[EndTime "5:53:11 PDT"]
 [Termination "wintrcat won by checkmate"]
 
-1. e4 e5 2. d3 Nc6 3. c3 Nf6 4. Nf3 d5 5. exd5 Nxd5 6. Ng5 h6 7. Qh5 g6 8. Qh4
-Be7 9. Nxf7 Bxh4 10. Nxd8 Bxd8 11. Be2 Be6 12. O-O Bg5 13. Bxg5 hxg5 14. h3
-O-O-O 15. Nd2 Nf4 16. Bf3 Rh7 17. Be4 Rdh8 18. f3 Bxh3 19. gxh3 Rxh3 20. Kf2
-Rh2+ 21. Ke3 Re2# 0-1
+1. d4 Nf6 2. c4 e6 3. a3 d5 4. e3 c5 5. Nc3 Nc6 6. Nf3 b6 7. Be2 dxc4 8. dxc5
+Qxd1+ 9. Nxd1 Bxc5 10. Bxc4 Bb7 11. Bb5 O-O 12. O-O Rad8 13. b4 Bd6 14. Bxc6
+Bxc6 15. Nd4 Bb7 16. Nc3 Rd7 17. Ndb5 Ba6 18. Rd1 Bxb5 19. Nxb5 Bxh2+ 20. Kxh2
+Rxd1 21. Nc3 Rd3 22. Bb2 Rfd8 23. Nb5 Ng4+ 24. Kg3 Nxf2 25. Kxf2 Rd2+ 26. Kf3
+Rxb2 27. Nxa7 Rdd2 28. Rc1 h6 29. Nc6 Rxg2 30. Ne7+ Kh7 31. Rc7 h5 32. Rb7 h4
+33. Nc8 h3 34. Rxf7 h2 35. Rf4 Rgf2+ 36. Ke4 Rxf4+ 37. exf4 h1=Q+ 38. Ke5 Qe1+
+39. Kd6 Rd2+ 40. Ke7 Qh4+ 41. Kf8 Rd8+ 42. Kf7 Qf6# 0-1
