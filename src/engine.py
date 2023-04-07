@@ -56,13 +56,25 @@ def analyse():
     board = chess.Board()
 
     # list of moves from pgn and empty list of evaluations
+    # collects fen positions during game and used to find opening name
     fens: list[str] = []
+    # list of opening names used to show opening name at different stages of game
     openings: list[str] = []
+    # list of SAN moves
     moves: list[str] = extract_moves()
+    # list of engine evaluations
     evals: list[dict] = [engine.get_evaluation()]
+    # list of top move lists for each stage in the game (uci format)
     topMoves: list[list[dict]] = [engine.get_top_moves(2)]
 
+    # list of attacker count on each move (used to identify free pieces for great/best detection)
+    attackerCounts: list[list[int]] = []
+    # if each move was a check
+    checks: list[bool] = []
+
+    #
     # COLLECT EVALUATIONS AND TOP ENGINE LINES
+    #
     for moveCount, move in enumerate(moves):
         # push move to conversion board and store fen
         board.push_san(move)
@@ -77,10 +89,20 @@ def analyse():
         topMoves.append(engine.get_top_moves(2))
         evals.append(engine.get_evaluation())
 
+        # store count of attackers on piece that just moved (white and black attackers stored seperately)
+        attackerCounts.append([
+            len(board.attackers(chess.WHITE, board.move_stack[-1].to_square)),
+            len(board.attackers(chess.BLACK, board.move_stack[-1].to_square))
+        ])
+        # store if move was a check
+        checks.append(board.is_check())
+
         # update progress
         progress = [moveCount + 1, len(moves), True]
 
+    #
     # GENERATE CLASSIFICATIONS
+    #
     classifications: list[str] = []
     moveIndex = 0
     for prevEval, currEval in zip(evals, evals[1:]):
@@ -95,15 +117,41 @@ def analyse():
                 break
         if isBook: continue
 
-        # if there is only one legal move here apply forced
+        # if there is only one legal move here apply forced and skip to next eval
         if len(topMoves[moveIndex]) == 1:
             classifications.append("forced")
             moveIndex += 1
             continue
 
-        # if it is top engine move give best even if there is residue difference
+        # if it is top engine move give best even if there is residue difference and skip to next eval
         if topMoves[moveIndex][0]["Move"] == board.move_stack[moveIndex].uci():
-            classifications.append("best")
+            endClassification = "best"
+
+            # if both top moves are not mate (no mate line is currently on the board)
+            if topMoves[moveIndex][0]["Centipawn"] != None and topMoves[moveIndex][1]["Centipawn"] != None:
+                # if second best move is significantly worse than first best move, consider great
+                moveColour = moveIndex % 2
+
+                if ((moveColour == 0 and topMoves[moveIndex][0]["Centipawn"] >= topMoves[moveIndex][1]["Centipawn"] + 210)
+                or
+                (moveColour == 1 and topMoves[moveIndex][0]["Centipawn"] <= topMoves[moveIndex][1]["Centipawn"] - 210)
+                or 
+                (moveColour == 0 and topMoves[moveIndex][0]["Centipawn"] >= topMoves[moveIndex][1]["Centipawn"] + 110 and topMoves[moveIndex][1]["Centipawn"] < 0)
+                or 
+                (moveColour == 1 and topMoves[moveIndex][0]["Centipawn"] <= topMoves[moveIndex][1]["Centipawn"] - 110) and topMoves[moveIndex][1]["Centipawn"] > 0):
+                    
+                    # pre-emptively give great, and then demote after checks
+                    endClassification = "great"
+
+                    # if this move was a capture and the piece was less or undefended, do not give great
+                    if "x" in moves[moveIndex] and attackerCounts[moveIndex][moveColour] >= attackerCounts[moveIndex][(moveColour + 1) % 2]:
+                        endClassification = "best"
+                    
+                    # if the move before this was a check, do not give great
+                    if moveIndex > 0 and checks[moveIndex - 1]:
+                        endClassification = "best"
+
+            classifications.append(endClassification)
             moveIndex += 1
             continue
 
@@ -133,10 +181,10 @@ def analyse():
                 classifications.append("blunder")
 
         # if it was mate and its still mate
-        # if mate is closer, apply best
-        # if mate is still the same distance away, apply excellent
-        # if mate is made further by 3 or less moves, apply good
-        # if mate is made further by more than 3 moves, apply inaccuracy
+        # if mate is getting closer apply best
+        # if mate is still same distance apply excellent
+        # if mate is 9 or less moves further away apply good
+        # otherwise apply inaccuracy, mate is there but is too far for average player
         elif prevEval["type"] == "mate" and currEval["type"] == "mate":
             if currEval["value"] == prevEval["value"]:
                 classifications.append("excellent")
@@ -145,11 +193,9 @@ def analyse():
 
             # if mate in favour of white
             if prevEval["value"] > 0:
-                print(prevEval)
-                print(currEval)   
                 if currEval["value"] < prevEval["value"]:
                     classifications.append("best")
-                elif currEval["value"] <= prevEval["value"] + 3:
+                elif currEval["value"] <= prevEval["value"] + 9:
                     classifications.append("good")
                 else:
                     classifications.append("inaccuracy")
@@ -157,26 +203,26 @@ def analyse():
             else:
                 if currEval["value"] > prevEval["value"]:
                     classifications.append("best")
-                elif currEval["value"] >= prevEval["value"] - 3:
+                elif currEval["value"] >= prevEval["value"] - 9:
                     classifications.append("good")
                 else:
                     classifications.append("inaccuracy")
 
         # if it was mate and its no longer mate
-        # if it was originally mate in 1 - 2, apply blunder
-        # if it was originally mate in 3 - 5, apply mistake
-        # if it was originally mate in 6 - 8, apply inaccuracy
-        # if it was originally mate in 9+, apply good
+        # if it was originally mate in 1 - 2, apply mistake
+        # if it was originally mate in 3 - 5, apply inaccuracy
+        # if it was originally mate in 6 - 8, apply good
+        # if it was originally mate in 9+, apply excellent
         elif prevEval["type"] == "mate" and currEval["type"] == "cp":
             prevValue = abs(prevEval["value"])
             if prevValue <= 2:
-                classifications.append("blunder")
-            elif prevValue <= 5:
                 classifications.append("mistake")
-            elif prevValue <= 8:
+            elif prevValue <= 5:
                 classifications.append("inaccuracy")
-            else:
+            elif prevValue <= 8:
                 classifications.append("good")
+            else:
+                classifications.append("excellent")
 
         # if it was not mate but the move allowed forced mate
         # if the allowed mate is mate in 1 - 2, apply blunder etc.
@@ -189,8 +235,10 @@ def analyse():
                 classifications.append("mistake")
             elif currValue <= 8:
                 classifications.append("inaccuracy")
-            else:
+            elif currValue <= 14:
                 classifications.append("good")
+            else:
+                classifications.append("excellent")
 
         moveIndex += 1
     

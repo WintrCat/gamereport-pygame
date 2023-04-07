@@ -1,4 +1,3 @@
-import pickle
 import chess
 import pygame
 from time import sleep
@@ -7,6 +6,7 @@ import board
 import engine
 import inputlib
 import args
+import save
 
 pygame.init()
 
@@ -83,7 +83,7 @@ while True:
                         or
                         (inputlib.is_key_down(pygame.K_LCTRL) and inputlib.is_key_down(pygame.K_s))
                     ):
-                        pickle.dump(engine.get_analysis_results(), open("save.asys", "wb"))
+                        save.threadedDump()
 
                 except:
                     pass
@@ -154,6 +154,8 @@ while True:
                 classificationText = "excellent"
             elif currentClassification == "best":
                 classificationText = "best"
+            elif currentClassification == "great":
+                classificationText = "a great move"
             elif currentClassification == "book":
                 classificationText = "book theory"
 
@@ -207,6 +209,12 @@ while True:
             win.blit(font.render(f"Analysing {progress[0]}/{progress[1]} moves...", True, "#ffffff"), (650, 60))
         else:
             win.blit(font.render(f"Initializing Analysis...", True, "#ffffff"), (650, 60))
+
+    # render 'saving...' message
+    if save.is_currently_saving():
+        win.blit(
+            font.render("Analysis saved.", True, "#ffffff"), (650, 550)
+        )
 
     # render move traversal & flip board button
     win.blit(pygame.image.load("assets/backToStart.png"), (650, 595))

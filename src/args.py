@@ -1,5 +1,5 @@
 import sys
-import pickle
+import save
 import engine
 
 # PARSE COMMAND-LINE ARGUMENTS
@@ -23,7 +23,7 @@ def parseArguments():
         elif argMode == "file":
             argMode = ""
             try:
-                engine.set_analysis_results(pickle.load(open("save.asys", "rb")))
+                save.load()
                 saveFileSpecified = True
             except:
                 print("Analysis savefile failed to load.")
