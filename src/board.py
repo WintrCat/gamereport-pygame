@@ -1,6 +1,11 @@
 import pygame
 import chess
 import engine
+pygame.init()
+
+coordFont: pygame.font.Font = pygame.font.SysFont("Arial", 16, bold=True)
+
+alphabet = list("abcdefgh")
 
 pieceMap = {
     "r": "blackrook",
@@ -49,6 +54,16 @@ def render(win: pygame.Surface, renderBoard: chess.Board, flipped: bool):
         for x in range(8):
             colour = "#c0a582" if (x + y) % 2 == 0 else "#7f5c41"
             pygame.draw.rect(win, colour, pygame.Rect(x * 80, y * 80, 80, 80))
+
+    # render co-ordinates
+    for y in range(8):
+        num = (y + 1) if flipped else 8 - y
+        colour = ["#7f5c41", "#c0a582"][y % 2]
+        win.blit(coordFont.render(str(num), True, colour), (3, y * 80 + 3))
+    for x in range(8):
+        letter = alphabet[7 - x] if flipped else alphabet[x]
+        colour = ["#c0a582", "#7f5c41"][x % 2]
+        win.blit(coordFont.render(letter, True, colour), (x * 80 + 67, 621))
 
     # flip fen if desired
     if flipped:
