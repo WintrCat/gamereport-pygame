@@ -2,6 +2,7 @@ import threading
 import pickle
 import time
 import engine
+import accuracy
 
 currentlySaving = False
 
@@ -16,7 +17,10 @@ def dump():
     currentlySaving = False
 
 def load():
-    engine.set_analysis_results(pickle.load(open("save.asys", "rb")))
+    results: engine.AnalysisResults = pickle.load(open("save.asys", "rb"))
+    engine.set_analysis_results(results)
+    accuracy.set_white_accuracy(results.accuracies[0])
+    accuracy.set_black_accuracy(results.accuracies[1])
 
 def threadedDump():
     t = threading.Thread(target=dump)

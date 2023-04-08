@@ -33,6 +33,7 @@ class AnalysisResults:
     evals: list[dict] = []
     topMoves: list[list[dict]] = []
     classifications: list[str] = []
+    accuracies: list[float] = []
 
 def startAnalysisThread():
     t = threading.Thread(target=analyse)
@@ -255,3 +256,4 @@ def analyse():
     # save accuracy percentages based on dumped classifications
     accuracy.set_white_accuracy(accuracy.calculate_accuracy(chess.WHITE))
     accuracy.set_black_accuracy(accuracy.calculate_accuracy(chess.BLACK))
+    results.accuracies = [accuracy.get_white_accuracy(), accuracy.get_black_accuracy()]
