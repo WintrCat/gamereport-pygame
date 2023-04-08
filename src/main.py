@@ -4,6 +4,7 @@ from time import sleep
 
 import board
 import engine
+import accuracy
 import inputlib
 import args
 import save
@@ -103,6 +104,7 @@ while True:
     pygame.draw.rect(win, "#1b1b1b", pygame.Rect(650, 10, 300, 50))
     
     if engine.get_analysis_results().complete:
+        # draw outline of eval bar
         pygame.draw.rect(win, "#0c0c0c", pygame.Rect(654, 14, 292, 42))
 
         evaluation = engine.get_analysis_results().evals[len(renderBoard.move_stack)]
@@ -184,6 +186,15 @@ while True:
                     "#ffffff"
                 ), (650, 108 + i * 24)
             )
+
+        # render computer accuracy percentages
+        win.blit(font.render("Computer Accuracy", True, "#ffffff"), (650, 166))
+        pygame.draw.rect(win, "#242424", pygame.Rect(650, 200, 110, 54))
+        pygame.draw.rect(win, "#f5f5f5", pygame.Rect(654, 204, 102, 46))
+        pygame.draw.rect(win, "#242424", pygame.Rect(770, 200, 110, 54))
+        pygame.draw.rect(win, "#0c0c0c", pygame.Rect(774, 204, 102, 46))
+        win.blit(font.render(str(accuracy.get_white_accuracy()) + "%", True, "#0c0c0c"), (664, 212))
+        win.blit(font.render(str(accuracy.get_black_accuracy()) + "%", True, "#f5f5f5"), (784, 212))
 
         # render save button (only exists when analysis is complete)
         win.blit(

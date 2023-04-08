@@ -3,6 +3,7 @@ import csv
 import chess
 import stockfish
 import pgn
+import accuracy
 
 openingBook = csv.reader(open("openings.csv", "r"))
 
@@ -242,6 +243,7 @@ def analyse():
 
         moveIndex += 1
     
+    # dump analysis results into AnalysisResults object
     results.complete = True
     results.openings = openings
     results.sanMoves = moves
@@ -249,3 +251,7 @@ def analyse():
     results.evals = evals
     results.topMoves = topMoves
     results.classifications = classifications
+
+    # save accuracy percentages based on dumped classifications
+    accuracy.set_white_accuracy(accuracy.calculate_accuracy(chess.WHITE))
+    accuracy.set_black_accuracy(accuracy.calculate_accuracy(chess.BLACK))
