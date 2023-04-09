@@ -154,6 +154,8 @@ while True:
                 classificationText = "best"
             elif currentClassification == "great":
                 classificationText = "a great move"
+            elif currentClassification == "brilliant":
+                classificationText = "brilliant"
             elif currentClassification == "book":
                 classificationText = "book theory"
 

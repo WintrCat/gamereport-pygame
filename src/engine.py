@@ -25,6 +25,15 @@ def extractMoves():
 #
 # ANALYSIS ALGORITHM
 #
+pieceValues = {
+    chess.PAWN: 1,
+    chess.KING: 2,
+    chess.KNIGHT: 3,
+    chess.BISHOP: 3,
+    chess.ROOK: 5,
+    chess.QUEEN: 9
+}
+
 class AnalysisResults:
     complete: bool = False
 
@@ -125,8 +134,9 @@ def analyse():
     #
     moveIndex = 0
     for prevEval, currEval in zip(results.evals, results.evals[1:]):
-        # current board state
+        # current and previous board state
         currentState = results.boardStates[moveIndex]
+        previousState = results.boardStates[moveIndex - 1]
 
         # if board fen is in the opening book, apply book and skip to next eval
         isBook = False
@@ -162,7 +172,7 @@ def analyse():
                 or 
                 (moveColour == 1 and results.topMoves[moveIndex][0]["Centipawn"] <= results.topMoves[moveIndex][1]["Centipawn"] - 110) and results.topMoves[moveIndex][1]["Centipawn"] > 0):
                     
-                    # pre-emptively give great, and then demote after checks
+                    # pre-emptively give great, and then edit after checks
                     endClassification = "great"
 
                     # if this move was a capture and the piece was less or undefended, do not give great
@@ -174,6 +184,39 @@ def analyse():
                     # if the move before this was a check, do not give great
                     if moveIndex > 0 and results.boardStates[moveIndex - 1].is_check():
                         endClassification = "best"
+
+                    # if the move was a sacrifice, give brilliant
+                    for square in chess.SQUARES:
+                        # get piece at this square
+                        piece = currentState.piece_at(square)
+                        # if this piece is owned by player who made this move
+                        if piece != None and piece.color == (moveColour == 0):
+                            # get enemy attackers on that piece
+                            attackers = currentState.attackers(moveColour != 0, square)
+
+                            # check if move was equal or favourable exchange
+                            wasMoveExchange = False
+                            previousPiece = previousState.piece_at(square)
+                            if (
+                                previousPiece != None
+                                and previousPiece.color == (moveColour != 0) 
+                                and pieceValues[previousPiece.piece_type] >= pieceValues[piece.piece_type]
+                            ):
+                                wasMoveExchange = True
+
+                            if (
+                                len(attackers) > len(currentState.attackers(moveColour == 0, square)) 
+                                and pieceValues[currentState.piece_at(square).piece_type] > 1
+                                and not wasMoveExchange
+                            ):
+                                endClassification = "brilliant"
+                                break
+
+                            for attackerSquare in attackers:
+                                # if value of attacking piece is lower than your piece
+                                if pieceValues[currentState.piece_at(attackerSquare).piece_type] < pieceValues[piece.piece_type]:
+                                    endClassification = "brilliant"
+                                    break
 
             results.classifications.append(endClassification)
             moveIndex += 1

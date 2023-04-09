@@ -23,6 +23,7 @@ pieceMap = {
 }
 
 classificationColours = {
+    "brilliant": pygame.Color(27, 172, 167),
     "great": pygame.Color(92, 139, 176),
     "best": pygame.Color(151, 188, 74),
     "excellent": pygame.Color(151, 188, 74),
