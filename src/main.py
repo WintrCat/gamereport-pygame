@@ -37,7 +37,7 @@ while True:
 
         # CHECK FOR MOUSE PRESSES and KEY PRESSES
         if event.type == pygame.MOUSEBUTTONDOWN or event.type == pygame.KEYDOWN:
-            if engine.get_analysis_results().complete:
+            if engine.get_results().complete:
                 try:
 
                     # back to start
@@ -63,9 +63,7 @@ while True:
                         or
                         inputlib.is_key_down(pygame.K_RIGHT)
                     ):
-                        renderBoard.push_uci(
-                            engine.get_analysis_results().board.move_stack[len(renderBoard.move_stack)].uci()
-                        )
+                        renderBoard.push(engine.get_results().boardStates[len(renderBoard.move_stack)].peek())
                         board.play_move_sound(renderBoard)
 
                     # go to end
@@ -74,9 +72,7 @@ while True:
                         or
                         inputlib.is_key_down(pygame.K_UP)
                     ):
-                        renderBoard.reset()
-                        for move in engine.get_analysis_results().board.move_stack:
-                            renderBoard.push_uci(move.uci())
+                        renderBoard = engine.get_results().boardStates[-1].copy()
 
                     # save analysis
                     if (
@@ -86,8 +82,8 @@ while True:
                     ):
                         save.threadedDump()
 
-                except:
-                    pass
+                except RuntimeError as err:
+                    print(err)
 
             # flip board button (analysis doesn't have to be complete)
             if inputlib.is_mouse_over(850, 900, 595, 640) and inputlib.is_mouse_down(0):
@@ -103,11 +99,11 @@ while True:
     progress = engine.get_analysis_progress()
     pygame.draw.rect(win, "#1b1b1b", pygame.Rect(650, 10, 300, 50))
     
-    if engine.get_analysis_results().complete:
+    if engine.get_results().complete:
         # draw outline of eval bar
         pygame.draw.rect(win, "#0c0c0c", pygame.Rect(654, 14, 292, 42))
 
-        evaluation = engine.get_analysis_results().evals[len(renderBoard.move_stack)]
+        evaluation = engine.get_results().evals[len(renderBoard.move_stack)]
 
         # calc length of white portion of eval bar and draw it
         evalLength = 0
@@ -140,7 +136,7 @@ while True:
         # render played move and classification text
         if len(renderBoard.move_stack) > 0:
             classificationText = "unknown"
-            currentClassification = engine.get_analysis_results().classifications[len(renderBoard.move_stack) - 1]
+            currentClassification = engine.get_results().classifications[len(renderBoard.move_stack) - 1]
 
             if currentClassification == "forced":
                 classificationText = "forced"
@@ -163,14 +159,14 @@ while True:
 
             win.blit(
                 font.render(
-                    engine.get_analysis_results().sanMoves[len(renderBoard.move_stack) - 1] + " is " + classificationText, 
+                    engine.get_results().sans[len(renderBoard.move_stack) - 1] + " is " + classificationText, 
                     True, 
                     board.classificationColours[currentClassification]
                 ), (650, 84)
             )
 
         # render top engine moves text
-        for i, move in enumerate(engine.get_analysis_results().topMoves[len(renderBoard.move_stack)]):
+        for i, move in enumerate(engine.get_results().topMoves[len(renderBoard.move_stack)]):
             # get polarity string because '+' not included
             centipawnPolarity = ""
             if move["Centipawn"] != None and move["Centipawn"] > 0:
@@ -203,7 +199,7 @@ while True:
         )
 
         # render opening name
-        openings = engine.get_analysis_results().openings
+        openings = engine.get_results().openings
         win.blit(
             smallerFont.render(
                 openings[min(len(renderBoard.move_stack) - 1, len(openings) - 1)] 
@@ -215,9 +211,10 @@ while True:
         )
             
     else:
-        pygame.draw.rect(win, "#2cff4f", pygame.Rect(654, 14, (progress[0] / progress[1]) * 292, 42))
-        if progress[2]:
-            win.blit(font.render(f"Analysing {progress[0]}/{progress[1]} moves...", True, "#ffffff"), (650, 60))
+        if progress[1]:
+            gameLength = len(engine.get_results().sans)
+            pygame.draw.rect(win, "#2cff4f", pygame.Rect(654, 14, (progress[0] / gameLength) * 292, 42))
+            win.blit(font.render(f"Analysing {progress[0]}/{gameLength} moves...", True, "#ffffff"), (650, 60))
         else:
             win.blit(font.render(f"Initializing Analysis...", True, "#ffffff"), (650, 60))
 

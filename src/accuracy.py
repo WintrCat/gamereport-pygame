@@ -32,7 +32,7 @@ def calculate_accuracy(colour: bool) -> float:
     score = 0
     potentialScore = 0
 
-    classifications = engine.get_analysis_results().classifications
+    classifications = engine.get_results().classifications
     colourNumber = 0 if colour else 1
     for i, classification in enumerate(classifications):
         if i % 2 == colourNumber:

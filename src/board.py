@@ -72,9 +72,9 @@ def render(win: pygame.Surface, renderBoard: chess.Board, flipped: bool):
     # if analysis complete, render classification highlight
     currentClassification = None
     currentMoveSquares = [None, None]
-    if engine.get_analysis_results().complete and len(renderBoard.move_stack) > 0:
+    if engine.get_results().complete and len(renderBoard.move_stack) > 0:
         # fetch current classification and move squares
-        currentClassification = engine.get_analysis_results().classifications[len(renderBoard.move_stack) - 1]
+        currentClassification = engine.get_results().classifications[len(renderBoard.move_stack) - 1]
         currentMoveSquares[0] = renderBoard.move_stack[-1].from_square
         currentMoveSquares[1] = renderBoard.move_stack[-1].to_square
 
@@ -121,7 +121,7 @@ def play_move_sound(renderBoard: chess.Board):
         pygame.mixer.Sound("assets/checkmate.wav").play()
     elif renderBoard.is_check():
         pygame.mixer.Sound("assets/check.wav").play()
-    elif "x" in engine.get_analysis_results().sanMoves[len(renderBoard.move_stack) - 1]:
+    elif "x" in engine.get_results().sans[len(renderBoard.move_stack) - 1]:
         pygame.mixer.Sound("assets/capture.wav").play()
     else:
         pygame.mixer.Sound("assets/normal.wav").play()

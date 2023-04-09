@@ -12,7 +12,7 @@ engine = stockfish.Stockfish("stockfish/stockfish-windows-2022-x86-64-avx2.exe")
 def get(): 
     return engine
 
-def extract_moves():
+def extractMoves():
     moves = []
 
     game: pgn.PGNGame = pgn.loads(open("game.pgn", "r").read())[0]
@@ -27,133 +27,155 @@ def extract_moves():
 #
 class AnalysisResults:
     complete: bool = False
+
+    boardStates: list[chess.Board] = []
+
+    # sans for convenience (board only has uci by default)
+    sans: list[str] = []
+
+    # opening book
     openings: list[str] = []
-    sanMoves: list[str] = []
-    board: chess.Board = None
-    evals: list[dict] = []
-    topMoves: list[list[dict]] = []
+
+    # analysis
+    evals: list[dict] = [engine.get_evaluation()]
+    topMoves: list[list[dict]] = [engine.get_top_moves(2)]
     classifications: list[str] = []
     accuracies: list[float] = []
+
+    def __getstate__(self) -> dict:
+        return {
+            "complete": self.complete,
+            "boardStates": self.boardStates[-1].move_stack,
+            "sans": self.sans,
+            "openings": self.openings,
+            "evals": self.evals,
+            "topMoves": self.topMoves,
+            "classifications": self.classifications,
+            "accuracies": self.accuracies
+        }
+    
+    def __setstate__(self, cucumber: dict):
+        self.complete = cucumber.get("complete", True)
+
+        moves = cucumber.get("boardStates", [])
+        for moveIndex in range(len(moves)):
+            board = chess.Board()
+            for i in range(moveIndex + 1):
+                board.push(moves[i])
+            self.boardStates.append(board)
+
+        self.sans = cucumber.get("sans", [])
+
+        self.openings = cucumber.get("openings", [])
+
+        self.evals = cucumber.get("evals", [])
+        self.topMoves = cucumber.get("topMoves", [])
+        self.classifications = cucumber.get("classifications", [])
+        self.accuracies = cucumber.get("accuracies", [])
+
 
 def startAnalysisThread():
     t = threading.Thread(target=analyse)
     t.start()
 
-progress = [0, 1, False]
+# how many moves have been analysed, has analysis started
+progress = [0, False]
 def get_analysis_progress():
     return progress
 
 results = AnalysisResults()
-def get_analysis_results():
+def get_results():
     return results
-
-def set_analysis_results(loadedResults: AnalysisResults):
+def set_results(loadedResults: AnalysisResults):
     global results
     results = loadedResults
 
 def analyse():
     global progress, results
-    
-    # initialise conversion board
-    board = chess.Board()
-
-    # list of moves from pgn and empty list of evaluations
-    # collects fen positions during game and used to find opening name
-    fens: list[str] = []
-    # list of opening names used to show opening name at different stages of game
-    openings: list[str] = []
-    # list of SAN moves
-    moves: list[str] = extract_moves()
-    # list of engine evaluations
-    evals: list[dict] = [engine.get_evaluation()]
-    # list of top move lists for each stage in the game (uci format)
-    topMoves: list[list[dict]] = [engine.get_top_moves(2)]
-
-    # list of attacker count on each move (used to identify free pieces for great/best detection)
-    attackerCounts: list[list[int]] = []
-    # if each move was a check
-    checks: list[bool] = []
 
     #
     # COLLECT EVALUATIONS AND TOP ENGINE LINES
     #
-    for moveCount, move in enumerate(moves):
-        # push move to conversion board and store fen
-        board.push_san(move)
-        fens.append(board.fen().split(" ")[0])
+
+    # add starting position board state to make copies of
+    results.boardStates = [chess.Board()]
+
+    results.sans = extractMoves()
+    for moveCount, move in enumerate(results.sans):
+        # push new board state
+        currentBoard = results.boardStates[-1].copy()
+        currentBoard.push_san(move)
+        results.boardStates.append(currentBoard)
 
         # get uci from conversion board and transfer to internal engine board
-        engine.make_moves_from_current_position([
-            board.move_stack[-1].uci()
-        ])
+        engine.make_moves_from_current_position([currentBoard.peek().uci()])
 
         # evaluate position after this move and add eval and top moves to list
-        topMoves.append(engine.get_top_moves(2))
-        evals.append(engine.get_evaluation())
-
-        # store count of attackers on piece that just moved (white and black attackers stored seperately)
-        attackerCounts.append([
-            len(board.attackers(chess.WHITE, board.move_stack[-1].to_square)),
-            len(board.attackers(chess.BLACK, board.move_stack[-1].to_square))
-        ])
-        # store if move was a check
-        checks.append(board.is_check())
+        results.evals.append(engine.get_evaluation())
+        results.topMoves.append(engine.get_top_moves(2))
 
         # update progress
-        progress = [moveCount + 1, len(moves), True]
+        progress = [moveCount + 1, True]
+
+    # remove first board state (it was the starting pos and was only used to make copies of)
+    results.boardStates.pop(0)
 
     #
     # GENERATE CLASSIFICATIONS
     #
-    classifications: list[str] = []
     moveIndex = 0
-    for prevEval, currEval in zip(evals, evals[1:]):
+    for prevEval, currEval in zip(results.evals, results.evals[1:]):
+        # current board state
+        currentState = results.boardStates[moveIndex]
+
         # if board fen is in the opening book, apply book and skip to next eval
         isBook = False
         for opening in openingBook:
-            if fens[moveIndex] == opening[1]:
-                classifications.append("book")
-                openings.append(opening[0])
-                moveIndex += 1
+            if currentState.fen().split(" ")[0] == opening[1]:
+                results.classifications.append("book")
+                results.openings.append(opening[0])
                 isBook = True
                 break
-        if isBook: continue
+        if isBook:
+            moveIndex += 1
+            continue
 
         # if there is only one legal move here apply forced and skip to next eval
-        if len(topMoves[moveIndex]) == 1:
-            classifications.append("forced")
+        if len(results.topMoves[moveIndex]) == 1:
+            results.classifications.append("forced")
             moveIndex += 1
             continue
 
         # if it is top engine move give best even if there is residue difference and skip to next eval
-        if topMoves[moveIndex][0]["Move"] == board.move_stack[moveIndex].uci():
+        if results.topMoves[moveIndex][0]["Move"] == currentState.peek().uci():
             endClassification = "best"
 
             # if both top moves are not mate (no mate line is currently on the board)
-            if topMoves[moveIndex][0]["Centipawn"] != None and topMoves[moveIndex][1]["Centipawn"] != None:
+            if results.topMoves[moveIndex][0]["Centipawn"] != None and results.topMoves[moveIndex][1]["Centipawn"] != None:
                 # if second best move is significantly worse than first best move, consider great
                 moveColour = moveIndex % 2
-
-                if ((moveColour == 0 and topMoves[moveIndex][0]["Centipawn"] >= topMoves[moveIndex][1]["Centipawn"] + 210)
+                if ((moveColour == 0 and results.topMoves[moveIndex][0]["Centipawn"] >= results.topMoves[moveIndex][1]["Centipawn"] + 180)
                 or
-                (moveColour == 1 and topMoves[moveIndex][0]["Centipawn"] <= topMoves[moveIndex][1]["Centipawn"] - 210)
+                (moveColour == 1 and results.topMoves[moveIndex][0]["Centipawn"] <= results.topMoves[moveIndex][1]["Centipawn"] - 180)
                 or 
-                (moveColour == 0 and topMoves[moveIndex][0]["Centipawn"] >= topMoves[moveIndex][1]["Centipawn"] + 110 and topMoves[moveIndex][1]["Centipawn"] < 0)
+                (moveColour == 0 and results.topMoves[moveIndex][0]["Centipawn"] >= results.topMoves[moveIndex][1]["Centipawn"] + 110 and results.topMoves[moveIndex][1]["Centipawn"] < 0)
                 or 
-                (moveColour == 1 and topMoves[moveIndex][0]["Centipawn"] <= topMoves[moveIndex][1]["Centipawn"] - 110) and topMoves[moveIndex][1]["Centipawn"] > 0):
+                (moveColour == 1 and results.topMoves[moveIndex][0]["Centipawn"] <= results.topMoves[moveIndex][1]["Centipawn"] - 110) and results.topMoves[moveIndex][1]["Centipawn"] > 0):
                     
                     # pre-emptively give great, and then demote after checks
                     endClassification = "great"
 
                     # if this move was a capture and the piece was less or undefended, do not give great
-                    if "x" in moves[moveIndex] and attackerCounts[moveIndex][moveColour] >= attackerCounts[moveIndex][(moveColour + 1) % 2]:
+                    attackerCount = len(currentState.attackers(moveColour == 0, currentState.peek().to_square))
+                    defenderCount = len(currentState.attackers(moveColour != 0, currentState.peek().to_square))
+                    if "x" in results.sans[moveIndex] and attackerCount >= defenderCount:
                         endClassification = "best"
                     
                     # if the move before this was a check, do not give great
-                    if moveIndex > 0 and checks[moveIndex - 1]:
+                    if moveIndex > 0 and results.boardStates[moveIndex - 1].is_check():
                         endClassification = "best"
 
-            classifications.append(endClassification)
+            results.classifications.append(endClassification)
             moveIndex += 1
             continue
 
@@ -170,17 +192,17 @@ def analyse():
 
             # apply classification based on eval difference
             if diff < 10:
-                classifications.append("best")
+                results.classifications.append("best")
             elif diff < 50:
-                classifications.append("excellent")
+                results.classifications.append("excellent")
             elif diff < 120:
-                classifications.append("good")
+                results.classifications.append("good")
             elif diff < 180:
-                classifications.append("inaccuracy")
+                results.classifications.append("inaccuracy")
             elif diff < 270:
-                classifications.append("mistake")
+                results.classifications.append("mistake")
             else:
-                classifications.append("blunder")
+                results.classifications.append("blunder")
 
         # if it was mate and its still mate
         # if mate is getting closer apply best
@@ -189,26 +211,26 @@ def analyse():
         # otherwise apply inaccuracy, mate is there but is too far for average player
         elif prevEval["type"] == "mate" and currEval["type"] == "mate":
             if currEval["value"] == prevEval["value"]:
-                classifications.append("excellent")
+                results.classifications.append("excellent")
                 moveIndex += 1
                 continue
 
             # if mate in favour of white
             if prevEval["value"] > 0:
                 if currEval["value"] < prevEval["value"]:
-                    classifications.append("best")
+                    results.classifications.append("best")
                 elif currEval["value"] <= prevEval["value"] + 9:
-                    classifications.append("good")
+                    results.classifications.append("good")
                 else:
-                    classifications.append("inaccuracy")
+                    results.classifications.append("inaccuracy")
             # if mate in favour of black (mate is negative)
             else:
                 if currEval["value"] > prevEval["value"]:
-                    classifications.append("best")
+                    results.classifications.append("best")
                 elif currEval["value"] >= prevEval["value"] - 9:
-                    classifications.append("good")
+                    results.classifications.append("good")
                 else:
-                    classifications.append("inaccuracy")
+                    results.classifications.append("inaccuracy")
 
         # if it was mate and its no longer mate
         # if it was originally mate in 1 - 2, apply mistake
@@ -218,13 +240,13 @@ def analyse():
         elif prevEval["type"] == "mate" and currEval["type"] == "cp":
             prevValue = abs(prevEval["value"])
             if prevValue <= 2:
-                classifications.append("mistake")
+                results.classifications.append("mistake")
             elif prevValue <= 5:
-                classifications.append("inaccuracy")
+                results.classifications.append("inaccuracy")
             elif prevValue <= 8:
-                classifications.append("good")
+                results.classifications.append("good")
             else:
-                classifications.append("excellent")
+                results.classifications.append("excellent")
 
         # if it was not mate but the move allowed forced mate
         # if the allowed mate is mate in 1 - 2, apply blunder etc.
@@ -232,26 +254,20 @@ def analyse():
         elif prevEval["type"] == "cp" and currEval["type"] == "mate":
             currValue = abs(currEval["value"])
             if currValue <= 2:
-                classifications.append("blunder")
+                results.classifications.append("blunder")
             elif currValue <= 5:
-                classifications.append("mistake")
+                results.classifications.append("mistake")
             elif currValue <= 8:
-                classifications.append("inaccuracy")
+                results.classifications.append("inaccuracy")
             elif currValue <= 14:
-                classifications.append("good")
+                results.classifications.append("good")
             else:
-                classifications.append("excellent")
+                results.classifications.append("excellent")
 
         moveIndex += 1
     
-    # dump analysis results into AnalysisResults object
+    # set results completion to true
     results.complete = True
-    results.openings = openings
-    results.sanMoves = moves
-    results.board = board
-    results.evals = evals
-    results.topMoves = topMoves
-    results.classifications = classifications
 
     # save accuracy percentages based on dumped classifications
     accuracy.set_white_accuracy(accuracy.calculate_accuracy(chess.WHITE))
