@@ -46,7 +46,6 @@ def flip_fen(fen: str) -> str:
         flipped_fen += "".join(reverse_list(list(row))) + "/"
     return flipped_fen[:-1]
 
-# r4rk1/p3ppbp/2n3p1/8/3q2n1/N1N5/PPQ2PPP/R1B1K2R
 def render(win: pygame.Surface, renderBoard: chess.Board, flipped: bool):
     fen = renderBoard.fen()
 

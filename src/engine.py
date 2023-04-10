@@ -4,6 +4,7 @@ import chess
 import stockfish
 import pgn
 import accuracy
+import piece
 
 openingBook = csv.reader(open("openings.csv", "r"))
 
@@ -162,68 +163,48 @@ def analyse():
 
             # if both top moves are not mate (no mate line is currently on the board)
             if results.topMoves[moveIndex][0]["Centipawn"] != None and results.topMoves[moveIndex][1]["Centipawn"] != None:
+                # if the move was a sacrifice, give brilliant
+                # iterate through squares on board. if any square is undefended as given by board.is_piece_safe() then give brilliant
+                for square in chess.SQUARES:
+                    if currentState.piece_at(square) != None and not piece.is_piece_safe(currentState, square):
+                        endClassification = "brilliant"
+                        break
+
                 # if second best move is significantly worse than first best move, consider great
                 moveColour = moveIndex % 2
-                if ((moveColour == 0 and results.topMoves[moveIndex][0]["Centipawn"] >= results.topMoves[moveIndex][1]["Centipawn"] + 180)
-                or
-                (moveColour == 1 and results.topMoves[moveIndex][0]["Centipawn"] <= results.topMoves[moveIndex][1]["Centipawn"] - 180)
-                or 
-                (moveColour == 0 and results.topMoves[moveIndex][0]["Centipawn"] >= results.topMoves[moveIndex][1]["Centipawn"] + 110 and results.topMoves[moveIndex][1]["Centipawn"] < 0)
-                or 
-                (moveColour == 1 and results.topMoves[moveIndex][0]["Centipawn"] <= results.topMoves[moveIndex][1]["Centipawn"] - 110) and results.topMoves[moveIndex][1]["Centipawn"] > 0):
-                    
-                    # pre-emptively give great, and then edit after checks
+                if (
+                    (
+                        moveColour == 0 and results.topMoves[moveIndex][0]["Centipawn"] >= results.topMoves[moveIndex][1]["Centipawn"] + 180
+                        or moveColour == 1 and results.topMoves[moveIndex][0]["Centipawn"] <= results.topMoves[moveIndex][1]["Centipawn"] - 180
+                        or (
+                            moveColour == 0 and results.topMoves[moveIndex][0]["Centipawn"] >= results.topMoves[moveIndex][1]["Centipawn"] + 110 
+                            and results.topMoves[moveIndex][1]["Centipawn"] < 0
+                        )
+                        or (
+                            moveColour == 1 and results.topMoves[moveIndex][0]["Centipawn"] <= results.topMoves[moveIndex][1]["Centipawn"] - 110 
+                            and results.topMoves[moveIndex][1]["Centipawn"] > 0
+                        )
+                    )
+                    and endClassification != "brilliant"
+                ):
                     endClassification = "great"
 
                     # if this move was a capture and the piece was less or undefended, do not give great
-                    attackerCount = len(currentState.attackers(moveColour == 0, currentState.peek().to_square))
-                    defenderCount = len(currentState.attackers(moveColour != 0, currentState.peek().to_square))
-                    if "x" in results.sans[moveIndex] and attackerCount >= defenderCount:
+                    if "x" in results.sans[moveIndex] and piece.is_piece_safe(currentState, currentState.peek().to_square):
                         endClassification = "best"
                     
                     # if the move before this was a check, do not give great
-                    if moveIndex > 0 and results.boardStates[moveIndex - 1].is_check():
+                    if moveIndex > 0 and previousState.is_check():
                         endClassification = "best"
 
-                    # if the move was a sacrifice, give brilliant
-                    for square in chess.SQUARES:
-                        # get piece at this square
-                        piece = currentState.piece_at(square)
-                        # if this piece is owned by player who made this move
-                        if piece != None and piece.color == (moveColour == 0):
-                            # get enemy attackers and ally defenders on that piece
-                            attackers = currentState.attackers(moveColour != 0, square)
-                            defenders = currentState.attackers(moveColour == 0, square)
-
-                            # check if move was equal or favourable exchange
-                            wasMoveExchange = False
-                            previousPiece = previousState.piece_at(square)
-                            if (
-                                previousPiece != None
-                                and previousPiece.color == (moveColour != 0) 
-                                and pieceValues[previousPiece.piece_type] >= pieceValues[piece.piece_type]
-                            ):
-                                wasMoveExchange = True
-
-                            if (
-                                len(attackers) > len(defenders) 
-                                and pieceValues[currentState.piece_at(square).piece_type] > 1
-                                and not wasMoveExchange
-                            ):
-                                endClassification = "brilliant"
-                                break
-
-                            for attackerSquare in attackers:
-                                # if attacker is a king only give brilliant if piece is undefended
-                                if currentState.piece_at(attackerSquare).piece_type == chess.KING:
-                                    if len(defenders) == 0:
-                                        endClassification = "brilliant"
-                                        break
-
-                                # if value of attacking piece is lower than your piece
-                                elif pieceValues[currentState.piece_at(attackerSquare).piece_type] < pieceValues[piece.piece_type]:
-                                    endClassification = "brilliant"
-                                    break
+                    # if move before this threatened the piece that just moved and its now safe, don't give great
+                    previousState.turn = not previousState.turn
+                    if (
+                        moveIndex > 0
+                        and not piece.is_piece_safe(previousState, currentState.peek().from_square)
+                        and piece.is_piece_safe(currentState, currentState.peek().to_square)
+                    ):
+                        endClassification = "best"
 
             results.classifications.append(endClassification)
             moveIndex += 1
