@@ -191,8 +191,9 @@ def analyse():
                         piece = currentState.piece_at(square)
                         # if this piece is owned by player who made this move
                         if piece != None and piece.color == (moveColour == 0):
-                            # get enemy attackers on that piece
+                            # get enemy attackers and ally defenders on that piece
                             attackers = currentState.attackers(moveColour != 0, square)
+                            defenders = currentState.attackers(moveColour == 0, square)
 
                             # check if move was equal or favourable exchange
                             wasMoveExchange = False
@@ -205,7 +206,7 @@ def analyse():
                                 wasMoveExchange = True
 
                             if (
-                                len(attackers) > len(currentState.attackers(moveColour == 0, square)) 
+                                len(attackers) > len(defenders) 
                                 and pieceValues[currentState.piece_at(square).piece_type] > 1
                                 and not wasMoveExchange
                             ):
@@ -213,8 +214,14 @@ def analyse():
                                 break
 
                             for attackerSquare in attackers:
+                                # if attacker is a king only give brilliant if piece is undefended
+                                if currentState.piece_at(attackerSquare).piece_type == chess.KING:
+                                    if len(defenders) == 0:
+                                        endClassification = "brilliant"
+                                        break
+
                                 # if value of attacking piece is lower than your piece
-                                if pieceValues[currentState.piece_at(attackerSquare).piece_type] < pieceValues[piece.piece_type]:
+                                elif pieceValues[currentState.piece_at(attackerSquare).piece_type] < pieceValues[piece.piece_type]:
                                     endClassification = "brilliant"
                                     break
 

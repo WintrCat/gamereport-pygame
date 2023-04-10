@@ -1,20 +1,18 @@
 [Event "Live Chess"]
 [Site "Chess.com"]
-[Date "2023.04.07"]
+[Date "2022.11.28"]
 [Round "-"]
-[White "Rajah14"]
-[Black "wintrcat"]
-[Result "0-1"]
-[WhiteElo "1351"]
-[BlackElo "1466"]
+[White "wintrcat"]
+[Black "albertmzy"]
+[Result "1-0"]
+[WhiteElo "1286"]
+[BlackElo "1286"]
 [TimeControl "1800"]
-[EndTime "5:53:11 PDT"]
-[Termination "wintrcat won by checkmate"]
+[EndTime "8:08:57 PST"]
+[Termination "wintrcat won by resignation"]
 
-1. d4 Nf6 2. c4 e6 3. a3 d5 4. e3 c5 5. Nc3 Nc6 6. Nf3 b6 7. Be2 dxc4 8. dxc5
-Qxd1+ 9. Nxd1 Bxc5 10. Bxc4 Bb7 11. Bb5 O-O 12. O-O Rad8 13. b4 Bd6 14. Bxc6
-Bxc6 15. Nd4 Bb7 16. Nc3 Rd7 17. Ndb5 Ba6 18. Rd1 Bxb5 19. Nxb5 Bxh2+ 20. Kxh2
-Rxd1 21. Nc3 Rd3 22. Bb2 Rfd8 23. Nb5 Ng4+ 24. Kg3 Nxf2 25. Kxf2 Rd2+ 26. Kf3
-Rxb2 27. Nxa7 Rdd2 28. Rc1 h6 29. Nc6 Rxg2 30. Ne7+ Kh7 31. Rc7 h5 32. Rb7 h4
-33. Nc8 h3 34. Rxf7 h2 35. Rf4 Rgf2+ 36. Ke4 Rxf4+ 37. exf4 h1=Q+ 38. Ke5 Qe1+
-39. Kd6 Rd2+ 40. Ke7 Qh4+ 41. Kf8 Rd8+ 42. Kf7 Qf6# 0-1
+1. e4 e5 2. Nf3 d6 3. Bc4 h6 4. Nc3 Nf6 5. d3 Be7 6. h3 a6 7. a4 Nc6 8. Nd5 a5
+9. c3 Bd7 10. O-O O-O 11. Be3 Be6 12. Qd2 Bxd5 13. exd5 Na7 14. Rfe1 e4 15. Nd4
+exd3 16. Bxd3 c5 17. dxc6 Nxc6 18. Nf5 Re8 19. Nxg7 Kxg7 20. Bxh6+ Kh8 21. Bg7+
+Kxg7 22. Qg5+ Kh8 23. Qh6+ Kg8 24. Re3 Ne5 25. Rg3+ Ng6 26. Bxg6 Bf8 27. Bf5+
+1-0

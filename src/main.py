@@ -82,8 +82,8 @@ while True:
                     ):
                         save.threadedDump()
 
-                except RuntimeError as err:
-                    print(err)
+                except:
+                    pass
 
             # flip board button (analysis doesn't have to be complete)
             if inputlib.is_mouse_over(850, 900, 595, 640) and inputlib.is_mouse_down(0):
