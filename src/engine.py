@@ -55,7 +55,7 @@ class AnalysisResults:
     def __getstate__(self) -> dict:
         return {
             "complete": self.complete,
-            "boardStates": self.boardStates[-1].move_stack,
+            "boardStates": [move.uci() for move in self.boardStates[-1].move_stack],
             "sans": self.sans,
             "openings": self.openings,
             "evals": self.evals,
@@ -71,7 +71,7 @@ class AnalysisResults:
         for moveIndex in range(len(moves)):
             board = chess.Board()
             for i in range(moveIndex + 1):
-                board.push(moves[i])
+                board.push_uci(moves[i])
             self.boardStates.append(board)
 
         self.sans = cucumber.get("sans", [])
@@ -163,25 +163,31 @@ def analyse():
 
             # if both top moves are not mate (no mate line is currently on the board)
             if results.topMoves[moveIndex][0]["Centipawn"] != None and results.topMoves[moveIndex][1]["Centipawn"] != None:
+                moveColour = moveIndex % 2 == 0
+
                 # if the move was a sacrifice, give brilliant
                 # iterate through squares on board. if any square is undefended as given by board.is_piece_safe() then give brilliant
-                for square in chess.SQUARES:
-                    if currentState.piece_at(square) != None and not piece.is_piece_safe(currentState, square):
-                        endClassification = "brilliant"
-                        break
+                if (
+                    moveColour and results.topMoves[moveIndex][0]["Centipawn"] >= results.topMoves[moveIndex][1]["Centipawn"] + 20
+                    or not moveColour and results.topMoves[moveIndex][0]["Centipawn"] <= results.topMoves[moveIndex][1]["Centipawn"] - 20
+                ):
+                    for square in chess.SQUARES:
+                        if currentState.piece_at(square) != None and not piece.is_piece_safe(currentState, square):
+                            endClassification = "brilliant"
+                            break
 
                 # if second best move is significantly worse than first best move, consider great
-                moveColour = moveIndex % 2
+                
                 if (
                     (
-                        moveColour == 0 and results.topMoves[moveIndex][0]["Centipawn"] >= results.topMoves[moveIndex][1]["Centipawn"] + 180
-                        or moveColour == 1 and results.topMoves[moveIndex][0]["Centipawn"] <= results.topMoves[moveIndex][1]["Centipawn"] - 180
+                        moveColour and results.topMoves[moveIndex][0]["Centipawn"] >= results.topMoves[moveIndex][1]["Centipawn"] + 180
+                        or not moveColour and results.topMoves[moveIndex][0]["Centipawn"] <= results.topMoves[moveIndex][1]["Centipawn"] - 180
                         or (
-                            moveColour == 0 and results.topMoves[moveIndex][0]["Centipawn"] >= results.topMoves[moveIndex][1]["Centipawn"] + 110 
+                            moveColour and results.topMoves[moveIndex][0]["Centipawn"] >= results.topMoves[moveIndex][1]["Centipawn"] + 110 
                             and results.topMoves[moveIndex][1]["Centipawn"] < 0
                         )
                         or (
-                            moveColour == 1 and results.topMoves[moveIndex][0]["Centipawn"] <= results.topMoves[moveIndex][1]["Centipawn"] - 110 
+                            not moveColour and results.topMoves[moveIndex][0]["Centipawn"] <= results.topMoves[moveIndex][1]["Centipawn"] - 110 
                             and results.topMoves[moveIndex][1]["Centipawn"] > 0
                         )
                     )
