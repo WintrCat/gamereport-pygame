@@ -35,19 +35,20 @@ def is_piece_safe(board: chess.Board, square: chess.Square) -> bool:
             break
     if not legallyCapturable: return True
 
-    # even with more defense than attack, if piece is being attacked by piece of lower value, it is undefended
-    # if it's being attacked by a king, only give undefended if there are no defenders
-    for attackerSquare in attackers:
-        if board.piece_at(attackerSquare).piece_type == chess.KING:
-            return False
-        elif pieceValues[board.piece_at(attackerSquare).piece_type] < pieceValues[piece.piece_type]:
-            return False
-
     # calculate if piece was just equally or favourably traded
     move = board.pop()
     previousPiece = board.piece_at(square)
     wasExchanged = previousPiece != None and pieceValues[previousPiece.piece_type] >= pieceValues[piece.piece_type]
     board.push(move)
+
+    # even with more defense than attack, if piece is being attacked by piece of lower value, it is undefended
+    # if it's being attacked by a king, only give undefended if there are no defenders
+    if not wasExchanged:
+        for attackerSquare in attackers:
+            if board.piece_at(attackerSquare).piece_type == chess.KING:
+                return False
+            elif pieceValues[board.piece_at(attackerSquare).piece_type] < pieceValues[piece.piece_type]:
+                return False
 
     # if there are more attackers than defenders and it was not just traded, it is undefended
     if len(attackers) > len(defenders) and not wasExchanged:
