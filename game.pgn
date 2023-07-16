@@ -1,17 +1,33 @@
 [Event "Live Chess"]
 [Site "Chess.com"]
-[Date "2023.04.29"]
+[Date "2023.07.16"]
 [Round "-"]
-[White "Aman2364"]
+[White "lozolorzotta"]
 [Black "wintrcat"]
 [Result "0-1"]
-[WhiteElo "1248"]
-[BlackElo "1532"]
-[TimeControl "600"]
-[EndTime "6:43:30 PDT"]
-[Termination "wintrcat won by checkmate"]
+[CurrentPosition "rr4k1/5ppp/1B2pn2/3p4/8/7P/5PP1/5RK1 w - -"]
+[Timezone "UTC"]
+[ECO "B13"]
+[ECOUrl "https://www.chess.com/openings/Caro-Kann-Defense-Exchange-Variation-3...cxd5-4.Nf3-Nc6"]
+[UTCDate "2023.07.16"]
+[UTCTime "13:49:49"]
+[WhiteElo "1446"]
+[BlackElo "1646"]
+[TimeControl "1800"]
+[Termination "wintrcat won by resignation"]
+[StartTime "13:49:49"]
+[EndDate "2023.07.16"]
+[EndTime "14:05:29"]
+[Link "https://www.chess.com/game/live/83254515715"]
+[WhiteUrl "https://images.chesscomfiles.com/uploads/v1/user/32558922.5c60e3b8.50x50o.7e38af4354b8.jpeg"]
+[WhiteCountry "149"]
+[WhiteTitle ""]
+[BlackUrl "https://images.chesscomfiles.com/uploads/v1/user/191514295.327091c8.50x50o.10d25335d7a2.jpeg"]
+[BlackCountry "159"]
+[BlackTitle ""]
 
-1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Bxc6 dxc6 5. Nxe5 Qd4 6. Nf3 Qxe4+ 7. Qe2 Qxe2+
-8. Kxe2 Bf5 9. d3 O-O-O 10. Re1 Re8+ 11. Kf1 Rxe1+ 12. Kxe1 Bc5 13. b3 Nf6 14.
-Kf1 Re8 15. Nc3 Nd5 16. Nxd5 cxd5 17. d4 Ba7 18. c3 Bd3+ 19. Kg1 Re2 20. Be3 c6
-21. Rd1 Rxa2 22. Rxd3 Ra1+ 23. Bc1 Rxc1+ 24. Rd1 Rxd1+ 25. Ne1 Rxe1# 0-1
+1. e4 c6 2. Nf3 d5 3. exd5 cxd5 4. d4 Nc6 5. Bb5 Nf6 6. O-O Bg4 7. Nc3 e6 8. Bg5
+Be7 9. Be2 O-O 10. h3 Bxf3 11. Bxf3 Rc8 12. a3 Qb6 13. b4 Qxd4 14. Qe1 Ne5 15.
+Be2 Qxc3 16. Bd3 Nxd3 17. cxd3 Qxd3 18. Rd1 Qxa3 19. Ra1 Qxb4 20. Bd2 Qb6 21.
+Be3 Bc5 22. Rb1 Qc6 23. Qa5 b6 24. Qxa7 Ra8 25. Rxb6 Bxb6 26. Qxb6 Qxb6 27. Bxb6
+Rfb8 0-1

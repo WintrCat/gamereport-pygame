@@ -8,7 +8,7 @@ import piece
 
 openingBook = csv.reader(open("openings.csv", "r"))
 
-engine = stockfish.Stockfish("stockfish/stockfish-windows-2022-x86-64-avx2.exe")
+engine = stockfish.Stockfish("stockfish/stockfish-windows-x86-64-avx2.exe")
 
 def get(): 
     return engine
